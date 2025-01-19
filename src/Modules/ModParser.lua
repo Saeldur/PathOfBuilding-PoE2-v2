@@ -388,7 +388,9 @@ local modNameList = {
 	["cold damage taken recouped as life"] = "ColdLifeRecoup",
 	["fire damage taken recouped as life"] = "FireLifeRecoup",
 	["chaos damage taken recouped as life"] = "ChaosLifeRecoup",
+	["elemental damage taken recouped as life"] = { "LightningLifeRecoup", "ColdLifeRecoup", "FireLifeRecoup" },
 	["damage taken recouped as energy shield"] = "EnergyShieldRecoup",
+	["elemental damage taken recouped as energy shield"] = { "LightningEnergyShieldRecoup", "ColdEnergyShieldRecoup", "FireEnergyShieldRecoup" },
 	["damage taken recouped as mana"] = "ManaRecoup",
 	["damage taken recouped as life, mana and energy shield"] = { "LifeRecoup", "EnergyShieldRecoup", "ManaRecoup" },
 	-- Stun/knockback modifiers
@@ -2176,6 +2178,13 @@ local specialModList = {
 	["physical damage taken bypasses energy shield"] = {
 		mod("PhysicalEnergyShieldBypass", "BASE", 100),
 	},
+	["(%d+)%% of damage taken bypasses energy shield"] = function(num) return {
+		mod("PhysicalEnergyShieldBypass", "OVERRIDE", num),
+		mod("LightningEnergyShieldBypass", "OVERRIDE", num),
+		mod("ColdEnergyShieldBypass", "OVERRIDE", num),
+		mod("FireEnergyShieldBypass", "OVERRIDE", num),
+		mod("ChaosEnergyShieldBypass", "OVERRIDE", num),
+	} end,
 	["auras from your skills do not affect allies"] = { flag("SelfAuraSkillsCannotAffectAllies") },
 	["auras from your skills have (%d+)%% more effect on you"] = function(num) return { mod("SkillAuraEffectOnSelf", "MORE", num) } end,
 	["auras from your skills have (%d+)%% increased effect on you"] = function(num) return { mod("SkillAuraEffectOnSelf", "INC", num) } end,
@@ -2200,8 +2209,18 @@ local specialModList = {
 		mod("ArmourAppliesToColdDamageTaken", "BASE", num),
 		mod("ArmourAppliesToLightningDamageTaken", "BASE", num),
 	} end,
-	["(%d+)%% of armour also applies to chaos damage taken from hits"] = function(num) return { mod("ArmourAppliesToChaosDamageTaken", "BASE", num) } end,
-	["armour also applies to chaos damage taken from hits"] = function(num) return { mod("ArmourAppliesToChaosDamageTaken", "BASE", 100) } end,
+	["armour applies to elemental damage"] = {
+		mod("ArmourAppliesToFireDamageTaken", "BASE", 100),
+		mod("ArmourAppliesToColdDamageTaken", "BASE", 100),
+		mod("ArmourAppliesToLightningDamageTaken", "BASE", 100),
+	},
+	["(%d+)%% of armour applies to elemental damage"] = function(num) return {
+		mod("ArmourAppliesToFireDamageTaken", "BASE", num),
+		mod("ArmourAppliesToColdDamageTaken", "BASE", num),
+		mod("ArmourAppliesToLightningDamageTaken", "BASE", num),
+	} end,
+	["armour also applies to (%a+) damage taken from hits"] = function(dmgType) return { mod("ArmourAppliesTo"..firstToUpper(dmgType).."DamageTaken", "BASE", 100) } end,
+	["(%d+)%% of armour also applies to (%a+) damage taken from hits"] = function(num, _, dmgType) return { mod("ArmourAppliesTo"..firstToUpper(dmgType).."DamageTaken", "BASE", num) } end,
 	["maximum damage reduction for any damage type is (%d+)%%"] = function(num) return { mod("DamageReductionMax", "OVERRIDE", num) } end,
 	["gain additional elemental damage reduction equal to half your chaos resistance"] = {
 		mod("ElementalDamageReduction", "BASE", 1, { type = "PerStat", stat = "ChaosResist", div = 2 })
@@ -3837,7 +3856,7 @@ local specialModList = {
 	-- Minions
 	["your strength is added to your minions"] = { flag("StrengthAddedToMinions") },
 	["half of your strength is added to your minions"] = { flag("HalfStrengthAddedToMinions") },
-	["minions' accuracy rating is equal to yours"] = { flag("MinionAccuracyEqualsAccuracy") },
+	["your dexterity is added to your minions"] = function(num) return { mod("MinionModifier", "LIST", { mod = mod("Accuracy", "BASE", 5) }, { type = "PerStat", stat = "Dex", actor = "Parent" }) } end,
 	["minions created recently have (%d+)%% increased attack and cast speed"] = function(num) return { mod("MinionModifier", "LIST", { mod = mod("Speed", "INC", num) }, { type = "Condition", var = "MinionsCreatedRecently" }) } end,
 	["minions created recently have (%d+)%% increased movement speed"] = function(num) return { mod("MinionModifier", "LIST", { mod = mod("MovementSpeed", "INC", num) }, { type = "Condition", var = "MinionsCreatedRecently" }) } end,
 	["minions poison enemies on hit"] = { mod("MinionModifier", "LIST", { mod = mod("PoisonChance", "BASE", 100) }) },
@@ -4180,8 +4199,8 @@ local specialModList = {
 	["replenishes energy shield by (%d+)%% of armour when you block"] = function(num) return { mod("EnergyShieldOnBlock", "BASE", 1,  { type = "PercentStat", stat = "Armour", percent = num }) } end,
 	["recover energy shield equal to (%d+)%% of armour when you block"] = function(num) return { mod("EnergyShieldOnBlock", "BASE", 1,  { type = "PercentStat", stat = "Armour", percent = num }) } end,
 	["(%d+)%% of damage taken while affected by clarity recouped as mana"] = function(num) return { mod("ManaRecoup", "BASE", num, { type = "Condition", var = "AffectedByClarity" }) } end,
-	["recoup effects instead occur over 3 seconds"] = { flag("3SecondRecoup") },
-	["life recoup effects instead occur over 3 seconds"] = { flag("3SecondLifeRecoup") },
+	["recoup effects instead occur over 4 seconds"] = { flag("4SecondRecoup") },
+	["life recoup effects instead occur over 4 seconds"] = { flag("4SecondLifeRecoup") },
 	["([%d%.]+)%% of physical damage prevented from hits in the past (%d+) seconds is regenerated as life per second"] = function(num, _, duration) return { 
 		mod("PhysicalDamageMitigatedLifePseudoRecoup", "BASE", num * duration), 
 		mod("PhysicalDamageMitigatedLifePseudoRecoupDuration", "BASE", duration),

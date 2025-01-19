@@ -87,7 +87,7 @@ end
 
 local function calcGainedDamage(activeSkill, output, cfg, damageType)
 	local gainTable = activeSkill.gainTable
-	
+
 	local gainedMin, gainedMax = 0, 0
 	for _, otherType in ipairs(dmgTypeList) do
 		local baseMin = m_floor(output[otherType.."MinBase"])
@@ -100,7 +100,7 @@ local function calcGainedDamage(activeSkill, output, cfg, damageType)
 			gainedMax = gainedMax + (baseMax + convertedMax) * gainMult
 		end
 	end
-	
+
 	return gainedMin, gainedMax
 end
 
@@ -1819,9 +1819,12 @@ function calcs.offence(env, actor, activeSkill)
 		for _, toType in ipairs(dmgTypeList) do
 			local conv
 			if skill then
-				conv = m_max(skillModList:Sum("BASE", skillCfg, "Skill"..fromType.."DamageConvertTo"..toType), 0)
+				conv = m_max(skillModList:Sum("BASE", skillCfg,
+					"SkillDamageConvertTo"..toType,
+					"Skill"..fromType.."DamageConvertTo"..toType), 0)
 			else
 				conv = m_max(skillModList:Sum("BASE", skillCfg,
+					"DamageConvertTo"..toType,
 					fromType.."DamageConvertTo"..toType,
 					isElemental[fromType] and "ElementalDamageConvertTo"..toType or nil,
 					fromType ~= "Chaos" and "NonChaosDamageConvertTo"..toType or nil), 0)
@@ -1895,7 +1898,7 @@ function calcs.offence(env, actor, activeSkill)
 				activeSkill.conversionTable[damageType][fromType] = data.base
 			end
 			for toType, amount in pairs(data.conv) do
-				activeSkill.conversionTable[damageType][toType] = 
+				activeSkill.conversionTable[damageType][toType] =
 					(activeSkill.conversionTable[damageType][toType] or 0) + amount
 			end
 		end
@@ -1904,9 +1907,13 @@ function calcs.offence(env, actor, activeSkill)
 		activeSkill.gainTable[damageType] = {}
 		for _, toType in ipairs(dmgTypeList) do
 			local globalGain = m_max(skillModList:Sum("BASE", skillCfg,
+				"DamageAs"..toType,
 				"DamageGainAs"..toType,
+				damageType.."DamageAs"..toType,
 				damageType.."DamageGainAs"..toType,
+				isElemental[damageType] and "ElementalDamageAs"..toType or nil,
 				isElemental[damageType] and "ElementalDamageGainAs"..toType or nil,
+				damageType ~= "Chaos" and "NonChaosDamageAs"..toType or nil,
 				damageType ~= "Chaos" and "NonChaosDamageGainAs"..toType or nil), 0)
 			local skillGain = m_max(skillModList:Sum("BASE", skillCfg,
 				"SkillDamageGainAs"..toType,
@@ -3033,7 +3040,7 @@ function calcs.offence(env, actor, activeSkill)
 			local gainedMin, gainedMax = calcGainedDamage(activeSkill, output, cfg, damageType)
 			local baseMin = output[damageTypeMin.."Base"]
 			local baseMax = output[damageTypeMax.."Base"]
-			local summedMin = baseMin * convMult + convertedMin + gainedMin 
+			local summedMin = baseMin * convMult + convertedMin + gainedMin
 			local summedMax = baseMax * convMult + convertedMax + gainedMax
 			output[damageType.."SummedMinBase"] = m_floor(summedMin)
 			output[damageType.."SummedMaxBase"] = m_floor(summedMax)
