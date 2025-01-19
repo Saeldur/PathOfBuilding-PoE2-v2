@@ -3237,7 +3237,7 @@ function calcs.offence(env, actor, activeSkill)
 						if skillModList:Flag(cfg, isElemental[damageType] and "CannotElePenIgnore" or nil) then
 							effMult = effMult * (1 - resist / 100)
 						elseif useRes then
-							effMult = effMult * (1 - (m_max(resist - pen, 0)) / 100)
+							effMult = effMult * (1 - (m_min(resist, m_max(resist - pen, 0))) / 100)
 						end
 						damageTypeHitMin = damageTypeHitMin * effMult
 						damageTypeHitMax = damageTypeHitMax * effMult

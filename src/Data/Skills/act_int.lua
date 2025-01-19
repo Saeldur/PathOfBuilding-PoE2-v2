@@ -10714,6 +10714,11 @@ skills["LightningConduitPlayer"] = {
 			baseFlags = {
 				spell = true,
 			},
+			statMap = {
+				["consume_enemy_shock_to_gain_damage_+%_final_per_5%_increased_damage_taken_from_shock"] = {
+					mod("Damage", "MORE", nil, 0, KeywordFlag.Hit, { type = "Multiplier", var = "ShockEffect", div = 5, actor = "enemy" }),
+				},
+			},
 			constantStats = {
 				{ "range_backflip_conditional_distance", 30 },
 				{ "added_cast_time_ms", 1000 },

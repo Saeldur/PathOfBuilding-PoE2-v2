@@ -133,7 +133,7 @@ function breakdown.effMult(damageType, resist, pen, taken, mult, takenMore, sour
 			t_insert(out, s_format("x %d%% ^8(resistance ignored)", 0))
 			t_insert(out, s_format("= %d%%", (0)))
 		elseif (resist - pen) < 0 then
-			t_insert(out, s_format("= %d%% ^8(penetration cannot bring resistances below 0)", 0))
+			t_insert(out, s_format("= %d%% ^8(penetration cannot bring resistances below 0)", math.min(resist, 0)))
 		else
 			t_insert(out, s_format("= %d%%", (resist - pen)))
 		end
@@ -141,7 +141,7 @@ function breakdown.effMult(damageType, resist, pen, taken, mult, takenMore, sour
 	if useRes then
 		breakdown.multiChain(out, {
 			label = "Effective DPS modifier:",
-			{ "%.2f ^8(%s)", 1 - (math.max(resist - pen,0)) / 100, resistForm },
+			{ "%.2f ^8(%s)", 1 - (math.min(resist, math.max(resist - pen, 0))) / 100, resistForm },
 			{ "%.2f ^8(increased/reduced damage taken)", 1 + taken / 100 },
 			{ "%.2f ^8(more/less damage taken)", takenMore },
 			total = s_format("= %.3f", mult),
